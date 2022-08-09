@@ -1,0 +1,213 @@
+100 CLS
+110 init
+120 calibrate
+130 runtests
+140 results
+150 STOP
+160 DEFine PROCedure nullproc
+170 END DEFine nullproc
+180 DEFine PROCedure init
+190 RESTORE 2200
+200 sc=100
+210 READ tc
+220 l=65537
+230 DIM result(8),s(12)
+240 FOR i%=1 TO 12
+250 s(i%)=i%
+260 END FOR i%
+270 x=1
+280 q$="ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890"
+290 END DEFine init
+300 DEFine FuNction resettimer
+310 LOCal tm
+320 t0=DATE
+330 REPeat time
+340 tm=DATE
+350 IF tm<>t0 THEN EXIT time
+360 END REPeat time
+370 t0=tm
+380 RETurn 0
+390 END DEFine resettimer
+400 DEFine FuNction gettimer
+410 RETurn DATE-t0
+420 END DEFine gettimer
+430 DEFine PROCedure runtests
+440 FOR t=1 TO tc
+450 CLS
+460 READ n$,tr
+470 PRINT n$;":"
+480 ON t GO SUB 1050,1180,1300,1420,1550,1680,1800,1930
+490 tm=tm-c*cc/ca-c/cb
+500 result(t)=c*cc/tm
+510 END FOR t
+520 END DEFine runtests
+530 DEFine PROCedure results
+540 CLS
+550 RESTORE 2200
+560 READ tc
+570 PRINT"Results"
+580 ra=1
+590 FOR t=1 TO tc
+600 READ n$,tr
+610 rt=result(t)/tr
+620 PRINT (n$&":"&FILL$(" ",7))(TO 8);
+630 ra=ra*rt
+640 pcount(result(t))
+650 ppercent(rt)
+660 END FOR t
+670 ra=ra^(1/tc)
+680 PRINT"Summary:";FILL$(" ",10);
+690 ppercent(ra)
+700 END DEFine results
+710 DEFine PROCedure calibrate
+720 CLS
+730 PRINT"Calibrate 1:"
+740 c=0
+750 h%=1024
+760 tm=resettimer
+770 c=c+1
+780 AT 0,12
+790 PRINT tm
+800 FOR i%=1 TO h%
+810 END FOR i%
+820 tm=gettimer
+830 IF tm<sc THEN GO TO 770
+840 c1=tm/c
+850 CLS
+860 PRINT"Calibrate 2:"
+870 c=0
+880 h%=512
+890 tm=resettimer
+900 c=c+1
+910 AT 0,12
+920 PRINT tm
+930 FOR i%=1 TO h%
+940 END FOR i%
+950 tm=gettimer
+960 IF tm<sc THEN GO TO 900
+970 c2=tm/c
+980 ca=512/(c1-c2)
+990 cb=1/(2*c2-c1)
+1000 cc=INT(ca/2+.5)
+1010 IF cc>32767 THEN cc=32767
+1020 h%=cc
+1030 END DEFine calibrate
+1040 REMark *** for
+1050 c=0
+1060 tm=resettimer
+1070 c=c+1
+1080 AT 0,12
+1090 PRINT tm
+1100 FOR i%=1 TO h%
+1110 FOR j%=1 TO 10
+1120 END FOR j%
+1130 END FOR i%
+1140 tm=gettimer
+1150 IF tm<sc THEN GO TO 1070
+1160 RETurn
+1170 REMark *** control
+1180 c=0
+1190 tm=resettimer
+1200 c=c+1
+1210 AT 0,12
+1220 PRINT tm
+1230 FOR i%=1 TO h%
+1240 IF i%>0 THEN nullproc
+1250 END FOR i%
+1260 tm=gettimer
+1270 IF tm<sc THEN GO TO 1200
+1280 RETurn
+1290 REMark *** fn
+1300 c=0
+1310 tm=resettimer
+1320 c=c+1
+1330 AT 0,12
+1340 PRINT tm
+1350 FOR i%=1 TO h%
+1360 x=fnm(i%+0)
+1370 END FOR i%
+1380 tm=gettimer
+1390 IF tm<sc THEN GO TO 1320
+1400 RETurn
+1410 REMark *** math 1
+1420 c=0
+1430 tm=resettimer
+1440 c=c+1
+1450 AT 0,12
+1460 PRINT tm
+1470 FOR i%=1 TO h%
+1480 x=i%
+1490 x=(x+x)*x/x-x
+1500 END FOR i%
+1510 tm=gettimer
+1520 IF tm<sc THEN GO TO 1440
+1530 RETurn
+1540 REMark *** math 2
+1550 c=0
+1560 tm=resettimer
+1570 c=c+1
+1580 AT 0,12
+1590 PRINT tm
+1600 FOR i%=1 TO h%
+1610 x=i%
+1620 x=ATAN(SQRT(ABS(TAN(x))))
+1630 END FOR i%
+1640 tm=gettimer
+1650 IF tm<sc THEN GO TO 1570
+1660 RETurn
+1670 REMark *** string
+1680 c=0
+1690 tm=resettimer
+1700 c=c+1
+1710 AT 0,12
+1720 PRINT tm
+1730 FOR i%=1 TO h%
+1740 q$=q$(2 TO)&+q$(1)
+1750 END FOR i%
+1760 tm=gettimer
+1770 IF tm<sc THEN GO TO 1700
+1780 RETurn
+1790 REMark *** array
+1800 c=0
+1810 tm=resettimer
+1820 c=c+1
+1830 AT 0,12
+1840 PRINT tm
+1850 FOR i%=1 TO h%
+1860 x%=2+(i% MOD 10)
+1870 s(x%)=(s(x%-1)+s(x%)+s(x%+1))/3
+1880 END FOR i%
+1890 tm=gettimer
+1900 IF tm<sc THEN GO TO 1820
+1910 RETurn
+1920 REMark *** print
+1930 c=0
+1940 tm=resettimer
+1950 c=c+1
+1960 AT 0,12
+1970 PRINT tm
+1980 FOR i%=1 TO h%
+1990 AT 1,0
+2000 PRINT i%;
+2010 END FOR i%
+2020 tm=gettimer
+2030 IF tm<sc THEN GO TO 1950
+2040 RETurn
+2050 DEFine FuNction fnm(x)
+2060 RETurn 2+x-INT(x/10)*10
+2070 END DEFine fnm
+2080 DEFine PROCedure ppercent(x)
+2090 LOCal a$
+2100 a$=INT(x*100+.5)
+2110 PRINT FILL$(" ",6-LEN(a$));a$;"%"
+2120 END DEFine
+2130 DEFine PROCedure pcount(x)
+2140 LOCal a$
+2150 a$=FILL$(" ",6)&INT(x)
+2160 PRINT a$(LEN(a$)-5 TO);".";
+2170 a$="00"&((x-INT(x))*100)
+2180 PRINT a$(LEN(a$)-1 TO);" ";
+2190 END DEFine
+2200 DATA 8
+2210 DATA "For",41.3,"Control",196,"Fn",54.4,"Math 1",74.9
+2220 DATA "Math 2",6.04,"String",72.9,"Array",26.5,"Print",73.2

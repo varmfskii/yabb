@@ -1,0 +1,246 @@
+PROCEDURE yabb
+RUN GFX2("CLEAR")
+DIM c,cc,i,j,sc:INTEGER
+DIM t,t0,tc,tm:INTEGER
+DIM c1,c2,ca,cb,ra:REAL
+DIM rt,time,tr,x,y:REAL
+DIM count:REAL
+DIM q$:STRING[36]
+DIM n$:STRING[16]
+GOSUB 110
+GOSUB 1005
+GOSUB 410
+GOSUB 510
+END 
+
+REM *** INIT
+110 sc=100
+READ tc
+DIM result(8):REAL
+DIM S(12):REAL
+FOR i=1 TO 12
+S(i)=i
+NEXT i
+q$="ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890"
+160 RETURN 
+
+REM *** RUN TESTS
+410 FOR t=1 TO tc
+READ n$,tr
+RUN GFX2("CLEAR")
+PRINT USING "S12"; n$+":"
+ON t GOSUB 1110,1210,1310,1410,1510,1610,1710,1810
+count=(.0+c)*cc
+time=tm-count/ca-c/cb
+result(t)=count/time
+NEXT t
+RETURN 
+
+REM *** RESULTS
+510 RUN GFX2("CLEAR")
+RESTORE 
+READ tc
+PRINT "Results"
+ra=1
+FOR t=1 TO tc
+READ n$,tr
+rt=result(t)/tr
+PRINT LEFT$(n$+":       ",8); 
+ra=ra*rt
+PRINT USING "R8.2>,I6>,'%'"; result(t),INT(100.*rt+.5)
+NEXT t
+ra=ra**(1./tc)
+PRINT "Summary:        "; 
+PRINT USING "I6>,'%'"; INT(100.*ra+.5)
+RETURN 
+
+REM *** CALIBRATE
+1005 RUN GFX2("CLEAR")
+PRINT "Calibrate 1:"
+c=0
+cc=1024
+RUN resettime(tm,t0)
+REPEAT 
+c=c+1
+RUN GFX2("CURXY",12,0)
+PRINT tm
+FOR i=1 TO cc
+NEXT i
+RUN gettime(tm,t0)
+UNTIL tm>=sc
+c1=(.0+tm)/c
+RUN GFX2("CLEAR")
+PRINT "Calibrate 2:"
+c=0
+cc=512
+RUN resettime(tm,t0)
+REPEAT 
+c=c+1
+RUN GFX2("CURXY",12,0)
+PRINT tm
+FOR i=1 TO cc
+NEXT i
+RUN gettime(tm,t0)
+UNTIL tm>=sc
+c2=(.0+tm)/c
+ca=512./(c1-c2)
+cb=1./(2.*c2-c1)
+cc=INT(ca/2.+.5)
+RETURN 
+
+REM *** FOR 
+1110 c=0
+RUN resettime(tm,t0)
+REPEAT 
+c=c+1
+RUN GFX2("CURXY",12,0)
+PRINT tm
+FOR i=1 TO cc
+FOR j=1 TO 10
+NEXT j
+NEXT i
+RUN gettime(tm,t0)
+UNTIL tm>=sc
+RETURN 
+
+REM *** CONTROL
+1210 c=0
+RUN resettime(tm,t0)
+REPEAT 
+c=c+1
+RUN GFX2("CURXY",12,0)
+PRINT tm
+FOR i=1 TO cc
+IF i>0 THEN 
+GOSUB 160
+ENDIF 
+NEXT i
+RUN gettime(tm,t0)
+UNTIL tm>=sc
+RETURN 
+
+REM *** FN
+1310 c=0
+RUN resettime(tm,t0)
+REPEAT 
+c=c+1
+RUN GFX2("CURXY",12,0)
+PRINT tm
+FOR i=1 TO cc
+y=i
+RUN FNM(x,y)
+NEXT i
+RUN gettime(tm,t0)
+UNTIL tm>=sc
+RETURN 
+
+REM *** MATH 1
+1410 c=0
+RUN resettime(tm,t0)
+REPEAT 
+c=c+1
+RUN GFX2("CURXY",12,0)
+PRINT tm
+FOR i=1 TO cc
+x=i
+x=(x+x)*x/x-x
+NEXT i
+RUN gettime(tm,t0)
+UNTIL tm>=sc
+RETURN 
+
+REM *** MATH 2
+1510 c=0
+RUN resettime(tm,t0)
+REPEAT 
+c=c+1
+RUN GFX2("CURXY",12,0)
+PRINT tm
+FOR i=1 TO cc
+x=i
+x=ATN(SQRT(ABS(TAN(x))))
+NEXT i
+RUN gettime(tm,t0)
+UNTIL tm>=sc
+RETURN 
+
+REM *** STRING
+1610 c=0
+RUN resettime(tm,t0)
+REPEAT 
+c=c+1
+RUN GFX2("CURXY",12,0)
+PRINT tm
+FOR i=1 TO cc
+q$=RIGHT$(q$,35)+LEFT$(q$,1)
+NEXT i
+RUN gettime(tm,t0)
+UNTIL tm>=sc
+RETURN 
+
+REM *** ARRAY
+1710 c=0
+RUN resettime(tm,t0)
+REPEAT 
+c=c+1
+RUN GFX2("CURXY",12,0)
+PRINT tm
+FOR i=1 TO cc
+j=2+MOD(i,10)
+S(j)=(S(j-1)+S(j)+S(j+1))/3.
+NEXT i
+RUN gettime(tm,t0)
+UNTIL tm>=sc
+RETURN 
+
+REM *** PRINT 
+1810 c=0
+RUN resettime(tm,t0)
+REPEAT 
+c=c+1
+RUN GFX2("CURXY",12,0)
+PRINT tm
+FOR i=1 TO cc
+RUN GFX2("CURXY",0,1)
+PRINT i; 
+NEXT i
+RUN gettime(tm,t0)
+UNTIL tm>=sc
+RETURN 
+
+DATA 8
+DATA "For",41.3,"Control",196
+DATA "Fn",54.4,"Math 1",74.9
+DATA "Math 2",6.04,"String",72.9
+DATA "Array",26.5,"Print",73.2
+PROCEDURE fnm
+PARAM x,y:REAL
+x=2+y-INT(y/10)*10
+END 
+PROCEDURE seconds
+REM get clock time in seconds
+BASE 0
+PARAM time:INTEGER
+TYPE registers=cc,a,b,dp:BYTE; x,y,u:INTEGER
+DIM regs:registers
+DIM callcode:BYTE
+DIM t(6):BYTE
+regs.x=ADDR(t)
+callcode=$15
+RUN syscall(callcode,regs)
+time=t(3)*3600+t(4)*60+t(5)
+END 
+PROCEDURE resettime
+PARAM time,zero:INTEGER
+RUN seconds(time)
+REPEAT 
+RUN seconds(zero)
+UNTIL time<>zero
+time=0
+END 
+PROCEDURE gettime
+PARAM time,zero:INTEGER
+RUN seconds(time)
+time=time-zero
+END 
+
